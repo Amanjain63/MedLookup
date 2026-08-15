@@ -1,31 +1,68 @@
 # Architectural & Product Decisions
 
-This document outlines the key decisions made during the development of MedLookup.
+This file explains some important decisions I made while building MedLookup.
 
-### 1. Does Screen 2 receive the full object from Screen 1, or re-fetch by ID?
-**Decision**: Screen 2 re-fetches the medicine by ID.
-**Reasoning**: While passing the full object is faster, re-fetching by ID ensures that the detail screen is the source of truth and can be deep-linked easily. It also handles the case where the user returns to the app via a direct link or after process death when the large object might have been cleared from memory. Given our offline caching, this "re-fetch" is nearly instantaneous if the data is already in the local database.
+## 1. How does the Detail Screen get the medicine?
 
-### 2. What exactly do you cache, where, and when does it expire?
-**Decision**: We cache the full `Medicine` domain model in a Room database.
-**Reasoning**: Since the FDA label data is relatively static (doesn't change minute-to-minute), we cache results immediately after a successful API call. For this exercise, data does not explicitly "expire" within a session, but new API searches refresh the cache. In a production app, we would add a `last_updated` timestamp and expire entries after 7 days.
+**Decision:** The Detail Screen gets the medicine using its ID instead of receiving the complete object from the Search Screen.
 
-### 3. How do you distinguish "the search returned nothing" from "the request failed"?
-**Decision**: Distinguish via distinct UI states in the `SearchUiState`.
-**Reasoning**: "No results" is a success state where the API returned a 200 OK with an empty results array. "Request failed" is a failure state (catch block) due to network errors or server issues. The UI shows a helpful "No results for X" message for the former, and an "Error" screen with a "Retry" button for the latter.
+**Reason:** Passing the complete object would be simpler, but using the ID makes the Detail Screen more independent. It also works better if the app is opened from a direct link or recreated after process death. Since the medicine is stored locally, getting it by ID is also fast when the data is already cached.
 
-### 4. What is your strategy for keystroke-to-request, and what latency does the user experience as a result?
-**Decision**: 500ms `debounce` on the search query Flow.
-**Reasoning**: This provides a balance between responsiveness and rate-limiting. The user experiences a half-second pause after they stop typing before the network request starts. This prevents firing 10+ requests for a single word and respects the FDA's unkeyed rate limits.
+## 2. What data is stored offline?
 
-### 5. How is your data layer structured, and what would change if we added a second data source?
-**Decision**: Repository pattern with a domain-level `MedicineRepository` interface.
-**Reasoning**: The `MedicineRepositoryImpl` manages both the `ApiService` and `MedicineDao`. If a second data source (e.g., a proprietary pharma DB) were added, we would create a new implementation of the interface or update the existing one to merge results, keeping the UI layer completely unaware of where the data comes from.
+**Decision:** The complete Medicine data is stored in the Room database.
 
-### 6. What did you deliberately not build, and what would you do next with another five hours?
-**Decision**: Skipped Hilt DI and multi-module setup.
-**Reasoning**: Given the 5-hour timebox, I prioritized functionality (offline, process death, polish) over boilerplate-heavy DI frameworks. I used a simple `DependencyProvider`. With more time, I would:
-1. Implement full Hilt DI for better testability.
-2. Add "Search Suggestions" based on local history.
-3. Add a "Recently Viewed" section to the initial search screen.
-4. Add more robust UI animations for list transitions.
+**Reason:** Medicine information does not change very frequently, so keeping it locally makes sense. After a successful API response, the data is saved in Room and can be used when the app is offline.
+
+For this project, I did not add automatic expiry. In a production app, I would add a last updated time and refresh old data after a fixed period.
+
+## 3. How do we show no results vs an error?
+
+**Decision:** These are handled as different UI states.
+
+**Reason:** No results is not an error. It means the request was successful but there was no matching medicine. A network or server problem is an actual error.
+
+So the UI shows:
+- No results → "No results found"
+- Request failed → Error message with a Retry option
+
+## 4. How is search handled while typing?
+
+**Decision:** I used a 500ms debounce on the search query.
+
+**Reason:** Without debounce, every keystroke could trigger an API request. For example, typing "aspirin" could result in multiple requests.
+
+The debounce waits until the user stops typing for a short time before starting the search. This reduces unnecessary API calls while keeping the search responsive.
+
+## 5. How is the data layer structured?
+
+**Decision:** I used a Repository pattern with a `MedicineRepository` interface.
+
+**Reason:** The UI does not need to know whether the data is coming from the API or the local database.
+
+The repository handles:
+- API calls
+- Room database
+- Deciding where the data should come from
+
+If another data source is added later, it can be handled inside the repository without making major changes to the UI.
+
+## 6. What did I not build?
+
+Because the project had a 5-hour time limit, I focused on the main requirements instead of adding extra complexity.
+
+I did not add:
+- Hilt dependency injection
+- Multi-module architecture
+- Search suggestions
+- Recently viewed medicines
+- Advanced animations
+
+I used a simple `DependencyProvider` instead of Hilt to keep the project easier to configure and avoid unnecessary build complexity.
+
+With another five hours, I would mainly work on:
+1. Adding Hilt for dependency injection.
+2. Adding search history/suggestions.
+3. Adding a recently viewed section.
+4. Improving list and screen animations.
+5. Adding more tests for edge cases.

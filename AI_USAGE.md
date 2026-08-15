@@ -1,18 +1,24 @@
 # AI Tool Usage
 
-This project was developed with the assistance of AI tools.
+I used AI tools during the development of this project mainly to understand problems, get ideas, and speed up some repetitive coding work.
 
 ## Tools Used
-- **Android Studio Gemini**: Used for generating boilerplate Room entity code and unit test templates.
-- **Claude 3.5 Sonnet**: Used for architecting the offline caching strategy and refining the PRD status check.
+- Android Studio Gemini
+- ChatGPT
 
-## Effective Prompt/Workflow
-**Workflow**: "Contract-First Refactoring"
-1. I asked the AI to analyze the PRD and current code to identify gaps.
-2. I then asked it to generate a "Task List" artifact which I used to track progress.
-3. For the Room implementation, I provided the domain model and asked for the most efficient mapping to an Entity that would support the "Search" requirement.
+## How I Used AI
 
-## AI Hallucination/Error Case
-**Case**: The AI initially suggested using `Hilt` for dependency injection and provided a complex multi-module configuration.
-**Observation**: I noticed that applying the Hilt plugin caused a sync error because of an incompatible Kotlin version in the project's baseline.
-**Correction**: I decided to pivot to a "Manual Dependency Injection" approach using a singleton `DependencyProvider`. This reduced the build complexity significantly and was more appropriate for the 5-hour timebox, while still satisfying the "no business logic in composables" and "injectable dispatchers" requirements.
+- Used AI to understand some Android and Kotlin concepts while developing the app.
+- Used it for basic boilerplate code, especially Room database related code.
+- Used AI to get ideas for unit tests and different error cases.
+- Used it to review some parts of the code and check if they matched the project requirements.
+- Used AI while debugging some Gradle and Kotlin related issues.
+
+## Example
+
+During the project, AI suggested using Hilt for dependency injection. I tried this approach, but it caused a Gradle/Kotlin compatibility issue with the existing project setup.
+
+Instead of spending more time changing the project configuration, I decided to use manual dependency injection with a `DependencyProvider`. This was simpler and worked better for the given time limit.
+## My Approach
+I did not directly use AI-generated code without checking it. I used AI suggestions as a starting point, then modified the code according to the project requirements and tested the changes myself.
+The main architecture and final implementation decisions were made by me.

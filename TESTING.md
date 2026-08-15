@@ -1,21 +1,60 @@
 # Testing Strategy
 
-This document describes the testing approach taken and future scenarios to be covered.
+This document explains the tests included in the project and some additional tests that can be added later.
 
-## Scenarios Tested
-1. **Messy Data Mapping**: Verified that the app handles FDA payloads with empty strings, nulls, and missing fields without crashing (Unit Test).
-2. **Offline Fallback**: Verified that the repository returns cached results when the network throws an exception (Unit Test).
-3. **Search Debounce**: Verified that rapid typing does not trigger multiple immediate requests (Unit Test).
-4. **UI Success Path**: Verified that the search results list renders correctly with medicine details (Compose UI Test).
-5. **UI Error Path**: Verified that the error state is shown on failure and the "Retry" button triggers a reload (Compose UI Test).
+## Tests Covered
 
-## Future Testing Scenarios
-With more time, I would automate the following:
-- **Pagination**: Test "Load More" logic when results exceed 20 items.
-- **Large Font Accessibility**: Automated screenshot tests at 200% font size to ensure no text overlap in the Detail screen.
-- **Connection Transitions**: Verify behavior when switching from 4G to No Connection *while* a request is in flight.
-- **Process Death with Full Cache**: Test performance when restoring a search state with a very large local database (1000+ entries).
-- **TalkBack Navigation**: Automated accessibility checks to ensure focus order is logical on the expandable Detail sections.
+### Unit Tests
 
-## Automation Constraints
-Mobile-specific behaviors like "patchy 4G" are hard to automate reliably in standard CI. These were verified manually by using the Emulator's Extended Controls to simulate different network speeds and latencies.
+1. **FDA Response Mapping**
+    - Tested API response mapping with messy data such as null values, empty strings, and missing fields.
+    - Verified that the app does not crash and creates the correct domain model.
+
+2. **Offline Fallback**
+    - Tested the case where the API request fails.
+    - Verified that previously cached data from Room is returned when available.
+
+3. **Search Debounce**
+    - Tested rapid changes in the search query.
+    - Verified that unnecessary API calls are avoided because of the 500ms debounce.
+
+4. **Error Handling**
+    - Tested network/API failure.
+    - Verified that the repository/ViewModel exposes the correct error state.
+
+### Compose UI Tests
+
+5. **Search Results**
+    - Verified that medicine search results are displayed correctly on the screen.
+
+6. **Error State**
+    - Verified that the error message is displayed when the search fails.
+    - Also verified that pressing the Retry button starts the search again.
+
+## Additional Tests I Would Add
+
+If I had more time, I would add tests for:
+
+- **Pagination** - Verify loading more results when the API returns a large number of medicines.
+- **Large Font Size** - Check that the Detail screen remains readable with larger system font sizes.
+- **Network Changes** - Test what happens if the network is lost while an API request is running.
+- **Process Death** - Verify that search state is correctly restored after the app process is killed.
+- **Large Cache** - Test performance with a large number of medicines stored in Room.
+- **Accessibility** - Check TalkBack navigation and focus order on expandable sections.
+
+## Manual Testing
+
+Some network-related cases are difficult to reproduce reliably in automated tests. I manually tested different network conditions using the Android Emulator's network controls, including slow network and no network scenarios.
+
+## Testing Approach
+
+The main focus was not on having a large number of tests, but on testing important user flows and failure cases.
+
+I especially focused on:
+
+- API response mapping
+- Offline behavior
+- Error handling
+- Search behavior
+- UI error state
+- Process state restoration
